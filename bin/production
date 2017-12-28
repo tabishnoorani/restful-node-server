@@ -1,0 +1,10 @@
+console.log (`
+
+
+---
+Note: The distribution files are in dist folder and can be uploaded to Live Server.
+---
+
+
+`)
+require ('../dist');
