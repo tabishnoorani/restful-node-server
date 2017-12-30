@@ -18,3 +18,9 @@
 -database
     This folder contains all the mongoose activities.
 -
+
+#USER AUTH PROCESS
+-Signup
+ POSTs the profile with un and pw.
+ stores the info with  bcrypted password.
+ 
