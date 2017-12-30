@@ -1,6 +1,7 @@
 //This router is responsible for Auth requests only.
 import express from 'express';
 import User from '../database/models/username';
+import Session from '../database/models/session';
 
 const Router = express.Router();
 
@@ -22,12 +23,13 @@ Router.post('/signin', (req, res)=>{
         
         user.comparePassword(password, (err, isMatch)=>{
             if (isMatch && !err) {
-                res.send(user.id);
-            } else {
-                res.status(403).send({sucess: false, msg: 'Authentication failed. Invalid Password.'});
-            }
-        });
-
+                new Session ({sessionID: user.id}).save((err, session)=>{
+                    res.send(session);
+                })} else res.status(403).send({
+                    sucess: false, 
+                    msg: 'Authentication failed. Invalid Password.'
+                });
+            });
     });
 });
 
