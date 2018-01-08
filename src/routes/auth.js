@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../database/models/username';
 import Session from '../database/models/session';
 import config from '../config';
+import {validSession} from './auth/middlewares';
 
 const Router = express.Router();
 
@@ -10,7 +11,14 @@ Router.get ('/', (req,res) => {
     if (req.token) {
             res.send ({token: req.token, validToken: req.validToken, validSession: req.validSession, session: req.session});
     }
-})
+});
+
+Router.get('/signout', validSession, (req, res)=>{
+    const {sid} = req.session.unsignedToken;
+    Session.findById(sid).remove((err, data)=>{
+        res.send ({success: true, msg:"Signout successfully."})
+    });
+});
 
 Router.post('/signup', (req, res) => {
     const {fname, lname, email, password} = req.body.user;

@@ -2,7 +2,6 @@ import config from './config'
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import cookieSession from 'cookie-session';
 import morgan from 'morgan';
 import {getTokenValue, validSession} from './routes/auth/middlewares';
 
@@ -14,19 +13,15 @@ const server = express();
 
 server.set('view-engine','ejs');
 server.use(morgan('dev'));
-// server.use(cookieSession({
-//     maxAge: 24*60*60*1000, //msec
-//     keys: config.session.COOKIE_KEY
-// }));
 server.use(express.static('public'));
 server.use(bodyParser.urlencoded({extended:true}));
 server.use(bodyParser.json());
 
 // Check for the token and its validity- Sets req.token(t/f), req.validToken(t/f) and req.session(with data).
 server.use(getTokenValue);
-server.use(validSession);
+// server.use(validSession);
 
-server.use('/api',Api);
+server.use('/api', validSession, Api);
 server.use('/auth', Auth);
 
 server.get("/", (req, res)=>{
