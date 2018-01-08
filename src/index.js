@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import cookieSession from 'cookie-session';
 import morgan from 'morgan';
+import {getTokenValue, validSession} from './routes/auth/middlewares';
 
 import Api from './routes/api';
 import Auth from './routes/auth';
@@ -20,6 +21,10 @@ server.use(morgan('dev'));
 server.use(express.static('public'));
 server.use(bodyParser.urlencoded({extended:true}));
 server.use(bodyParser.json());
+
+// Check for the token and its validity- Sets req.token(t/f), req.validToken(t/f) and req.session(with data).
+server.use(getTokenValue);
+server.use(validSession);
 
 server.use('/api',Api);
 server.use('/auth', Auth);
