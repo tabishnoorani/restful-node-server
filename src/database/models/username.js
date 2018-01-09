@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import UserProfile from './user-profile';
 import bcrypt from 'bcrypt';
 const Schema = mongoose.Schema;
 
@@ -19,6 +20,11 @@ const schema = new Schema({
     password:{
         type: String,
         required: true
+    },
+    profileID:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: UserProfile,
+        required: false
     },
     creationDate: {
         type: Date,

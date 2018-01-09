@@ -3,6 +3,7 @@ import config from '../../config';
 import Session from '../../database/models/session';
 
 export function getTokenValue (req, res, next) {
+    console.log (res.session);
     req.token = false;
     req.validToken = false;
     req.session = "";

@@ -16,10 +16,9 @@ server.use(morgan('dev'));
 server.use(express.static('public'));
 server.use(bodyParser.urlencoded({extended:true}));
 server.use(bodyParser.json());
-
+server.use(cors());
 // Check for the token and its validity- Sets req.token(t/f), req.validToken(t/f) and req.session(with data).
 server.use(getTokenValue);
-// server.use(validSession);
 
 server.use('/api', validSession, Api);
 server.use('/auth', Auth);

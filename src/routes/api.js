@@ -1,6 +1,5 @@
 //This route is responsible for API requests only.
 import express from 'express';
-import uuid from 'node-uuid';
 import imrego from '../database/models/imrego';
 
 const Router = express.Router();
@@ -8,7 +7,7 @@ const Router = express.Router();
 // Router.use();
 
 Router.get('/', (req, res)=>{
-    res.send(`Welcome to server${uuid.v4()}`);
+    res.send(`Welcome to server`);
 });
 
 Router.post('/imrego',(req, res)=>{
