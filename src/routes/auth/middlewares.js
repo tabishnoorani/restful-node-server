@@ -27,9 +27,9 @@ export function getTokenValue (req, res, next) {
 }
 
 export function validSession (req, res, next) {
-    if (!req.validSession && req.session!=""){
-        req.validSession = false;
-        const {uid, sid} = req.session.unsignedToken;
+    req.validSession = false;
+        const {uid, sid} =  req.session.unsignedToken
+                            ?req.session.unsignedToken : {uid:"",sid:""};
         Session.findById(sid, (err, data)=>{
             if (data && !err){
                 if (data.uid == uid) {
@@ -38,5 +38,4 @@ export function validSession (req, res, next) {
                 } else res.send({success: false, msg:"Not authorized"});
             }else res.send({success: false, msg:"Not authorized"});
         });
-    } else next();
 }
