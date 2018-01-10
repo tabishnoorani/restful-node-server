@@ -7,7 +7,7 @@ const Router = express.Router();
 // Router.use();
 
 Router.get('/', (req, res)=>{
-    res.send(`Welcome to server`);
+    res.send({success: false, msg:`Welcome to server`});
 });
 
 Router.post('/imrego',(req, res)=>{
