@@ -39,15 +39,18 @@ Router.post('/signup', (req, res) => {
 });
 
 Router.post('/signin', (req, res)=>{
-    const {email, password} = req.body.user;
+    const {email, password} = req.body;
     
     User.findOne({email: email}).then((user, err)=>{
-        if (err) res.send(err);
+        if (err) res.status(403).send({
+            success: false, msg: err
+        });
         
-        if (!user) res.status(403).send({
+        if (!user) {
+            res.status(200).send({
             sucess: false, 
             msg: 'Authentication failed. User not found.'
-        });
+        });}
         
         user.comparePassword(password, (err, isMatch)=>{
             if (isMatch && !err) {
@@ -60,7 +63,7 @@ Router.post('/signin', (req, res)=>{
                     const {fname, lname, email} = user
                     const data = {fname, lname, email}
                     res.send({success: true, msg: "User signed in.", token: token, data: data});
-                })} else res.status(403).send({
+                })} else res.status(200).send({
                     sucess: false,
                     msg: 'Authentication failed. Invalid Password.'
                 });
