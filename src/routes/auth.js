@@ -13,6 +13,29 @@ Router.get ('/', (req,res) => {
     }
 });
 
+Router.get ('/initializeToken', validSession, (req, res)=>{
+    User.findById(req.uid)
+    .then((user, err)=>{
+        if (err) res.status(403).send({
+            success: false, 
+            msg: "User login error. Please contact webmasters."
+        });
+        if (!user) {
+            res.status(403).send({
+            success: false, 
+            msg: 'Authentication failed. User not found.'
+        });
+        } else {
+            const {fname, lname, email} = user
+            const data = {fname, lname, email}
+            res.send({
+                success: true, 
+                msg: "User signed in.",  
+                data: data});
+        }
+    });
+});
+
 Router.get('/signout', validSession, (req, res)=>{
     const {sid} = req.session.unsignedToken;
     Session.findById(sid).remove((err, data)=>{

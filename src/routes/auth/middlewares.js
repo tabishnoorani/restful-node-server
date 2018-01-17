@@ -27,11 +27,13 @@ export function getTokenValue (req, res, next) {
 
 export function validSession (req, res, next) {
     req.validSession = false;
-        const {uid, sid} =  req.session.unsignedToken
+        const {uid, sid} =  (req.session.unsignedToken)
                             ?req.session.unsignedToken : {uid:"",sid:""};
         Session.findById(sid, (err, data)=>{
             if (data && !err){
                 if (data.uid == uid) {
+                    req.uid=uid;
+                    req.sid=sid;
                     req.validSession = true;
                     next();
                 } else res.send({success: false, msg:"Not authorized"});
