@@ -14,8 +14,8 @@ const server = express();
 server.set('view-engine','ejs');
 server.use(morgan('dev'));
 server.use(express.static('public'));
-server.use(bodyParser.urlencoded({extended:true}));
-server.use(bodyParser.json());
+server.use(bodyParser.urlencoded({limit: '5mb', extended:true}));
+server.use(bodyParser.json({limit: '5mb'}));
 server.use(cors());
 // Check for the token and its validity- Sets req.token(t/f), req.validToken(t/f) and req.session(with data).
 server.use(getTokenValue);
@@ -24,7 +24,7 @@ server.use('/api', validSession, Api);
 server.use('/auth', Auth);
 
 server.get("/", (req, res)=>{
-    res.render('index.ejs', {config: config.PORT, name: "Tabbish"})
+    res.render('index.ejs', {config: config.PORT, name: "IMREGO"})
 });
 
 server.listen(config.PORT, (err)=>{

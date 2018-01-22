@@ -6,7 +6,7 @@ export function getTokenValue (req, res, next) {
     req.token = false;
     req.validToken = false;
     req.session = "";
-
+    
     const bearerHeader = req.headers["authorization"];
     if (typeof bearerHeader !== 'undefined') {
         const bearer = bearerHeader.split(" ");
