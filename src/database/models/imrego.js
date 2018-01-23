@@ -5,7 +5,7 @@ import uuid from 'node-uuid';
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
-    imrego: {
+    imNum: {
         type: String,
         default: uuid.v4(),
         required: true
@@ -14,7 +14,16 @@ const schema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: User
     },
-    imgurl: {
+    title:{
+        type: String,
+        required: true,
+    },
+    catagory:{
+        type: String,
+        required: true,
+    },
+    description: String,
+    imgURL: {
         type: String
     },
     status:{
@@ -27,7 +36,6 @@ const schema = new Schema({
         default: Date.now,
         required: true 
     },
-    description: String,
     dateLost: [Date],
     dateFound:[Date]
 });

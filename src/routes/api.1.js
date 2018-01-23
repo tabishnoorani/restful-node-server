@@ -1,7 +1,7 @@
 import express from 'express';
-import cloudinaryStorage from 'multer-storage-cloudinary';
+// import cloudinaryStorage from 'multer-storage-cloudinary';
 import cloudinary from 'cloudinary';
-import multer from 'multer';
+// import multer from 'multer';
 import imrego from '../database/models/imrego';
 import config from '../config';
 
@@ -9,28 +9,28 @@ const Router = express.Router();
 
 cloudinary.config(config.Cloudinary);
 
-const storage = cloudinaryStorage({
-    cloudinary: cloudinary,
-    folder: './images',
-    allowedFormats: ['jpg', 'png'],
-    filename: function (req, file, cb) {
-        cb(null, `${new Date()}-${file.originalname}`)
-    }
-});
+// const storage = cloudinaryStorage({
+//     cloudinary: cloudinary,
+//     folder: './images',
+//     allowedFormats: ['jpg', 'png'],
+//     filename: function (req, file, cb) {
+//         cb(null, `${new Date()}-${file.originalname}`)
+//     }
+// });
 
-const parser = multer({ storage: storage });
+// const parser = multer({ storage: storage });
 
 
 Router.get('/', (req, res)=>{
     res.send({success: true, msg:`Welcome to server`});
 });
 
-Router.post('/imgupload', parser.array('images', 10), (req, res)=>{
-    res.send({success: true});
+Router.post('/imgupload', (req, res)=>{
 
-    // cloudinary.uploader.upload(file, function(result) { 
-    //     res.send({success: true, imgURL: result}) 
-    // });  
+    // console.log (req);
+    cloudinary.v2.uploader.unsigned_upload(req.file, config.CLOUDINARY_UPLOAD_PRESET , function(result) { 
+        res.send({success: true, imgURL: req}) 
+    });  
 });
 
 Router.post('/imrego',(req, res)=>{
