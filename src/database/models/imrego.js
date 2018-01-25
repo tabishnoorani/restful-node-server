@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import User from './username';
+import Sponsor from './sponsor';
 import uuid from 'node-uuid';
 
 const Schema = mongoose.Schema;
@@ -12,7 +13,8 @@ const schema = new Schema({
     },
     uid: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User
+        ref: User,
+        required: true
     },
     title:{
         type: String,
@@ -36,10 +38,19 @@ const schema = new Schema({
         default: Date.now,
         required: true 
     },
+    sponsoredBy:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: Sponsor,
+        default: "5a69add2d19d8c15300edd55"
+    },
+    activated:{
+        type: Boolean,
+        default: true,
+    },
     dateLost: [Date],
     dateFound:[Date]
 });
 
-const Model = mongoose.model('imrego',schema);
+const Model = mongoose.model('imrego', schema);
 
 export default Model;

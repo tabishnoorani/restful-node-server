@@ -7,6 +7,7 @@ import {getTokenValue, validSession} from './routes/auth/middlewares';
 
 import Api from './routes/api';
 import Auth from './routes/auth';
+import Sponsor from './routes/sponsor';
 import './database';
 
 const server = express();
@@ -17,6 +18,9 @@ server.use(express.static('public'));
 server.use(bodyParser.urlencoded({limit: '5mb', extended:true}));
 server.use(bodyParser.json({limit: '5mb'}));
 server.use(cors());
+
+server.use('/sponsor', Sponsor);
+
 // Check for the token and its validity- Sets req.token(t/f), req.validToken(t/f) and req.session(with data).
 server.use(getTokenValue);
 
