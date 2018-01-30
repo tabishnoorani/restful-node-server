@@ -1,22 +1,24 @@
 import express from 'express';
 import axios from 'axios';
 import multer from 'multer';
+import cloudinary from 'cloudinary';
+import cloudinaryStorage from 'multer-storage-cloudinary';
+import UUID from 'node-uuid';
 import imrego from '../database/models/imrego';
 import config from '../config';
-import UUID from 'node-uuid';
 
 const Router = express.Router();
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb)=>{
-        cb(null, './public/upload/')
-    },
-    filename: (req, file, cb)=>{
-        req.uuid = UUID.v4()
-        const FILE = (req.uuid + '-' + file.originalname);
-        cb(null, FILE);
+cloudinary.config({...config.Cloudinary})
+
+const storage = cloudinaryStorage({
+    cloudinary: cloudinary,
+    folder: 'folder-name',
+    allowedFormats: ['jpg', 'png'],
+    filename: function (req, file, cb) {
+      cb(undefined, 'my-file-name');
     }
-});
+  });
 
 const fileFilter =  (req, file, cb)=>{
     if (file.mimetype==='image/jpeg' || file.mimetype==='image/png'){
@@ -29,7 +31,7 @@ const fileFilter =  (req, file, cb)=>{
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 1024*1024*5 // 5 megabytes,
+        fileSize: 1024*1024*3 // 3 megabytes,
     },
     fileFilter: fileFilter
 });
@@ -38,10 +40,10 @@ Router.get('/', (req, res)=>{
     res.send({success: true, msg:`Welcome to server`});
 });
 
-Router.post('/imgupload',upload.single('itemImg') , (req, res)=>{
+Router.post('/imgupload',upload.single('file') , (req, res)=>{
     // res.send({success: true, url: 'https://res.cloudinary.com/oleaw/image/upload/v1516746659/DP_z4ail6.jpg'})   
-    res.send(req.file);
-
+    console.log(req.file);
+    res.send("req.fileList");
 });
 
 Router.post('/imrego', upload.single('itemImg'), (req, res)=>{
