@@ -15,8 +15,10 @@ const server = express();
 server.set('view-engine','ejs');
 server.use(morgan('dev'));
 server.use(express.static('public'));
-server.use(bodyParser.urlencoded({limit: '5mb', extended:true}));
-server.use(bodyParser.json({limit: '5mb'}));
+// server.use(bodyParser.urlencoded({limit: '5mb', extended:true}));
+// server.use(bodyParser.json({limit: '5mb'}));
+server.use(bodyParser.urlencoded({extended:true}));
+server.use(bodyParser.json());
 server.use(cors());
 
 server.use('/sponsor', Sponsor);

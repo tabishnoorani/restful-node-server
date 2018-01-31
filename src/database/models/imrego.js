@@ -1,14 +1,14 @@
 import mongoose from 'mongoose';
 import User from './username';
 import Sponsor from './sponsor';
-import uuid from 'node-uuid';
+// import uuid from 'node-uuid';
 
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
     imNum: {
         type: String,
-        default: uuid.v4(),
+        // default: uuid.v4(),
         required: true
     },
     uid: {

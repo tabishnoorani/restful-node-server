@@ -1,57 +1,39 @@
 import express from 'express';
 import axios from 'axios';
-import multer from 'multer';
-import cloudinary from 'cloudinary';
-import cloudinaryStorage from 'multer-storage-cloudinary';
-import UUID from 'node-uuid';
-import imrego from '../database/models/imrego';
-import config from '../config';
+import imrego from '../../database/models/imrego';
+import Upload from './Multer';
+import { addUUID } from '../auth/middlewares';
+import config from '../../config';
 
 const Router = express.Router();
 
-cloudinary.config({...config.Cloudinary})
-
-const storage = cloudinaryStorage({
-    cloudinary: cloudinary,
-    folder: 'folder-name',
-    allowedFormats: ['jpg', 'png'],
-    filename: function (req, file, cb) {
-      cb(undefined, 'my-file-name');
-    }
-  });
-
-const fileFilter =  (req, file, cb)=>{
-    if (file.mimetype==='image/jpeg' || file.mimetype==='image/png'){
-        cb(null, true)
-    } else {
-        cb(null, false);
-    }
-}
-
-const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 1024*1024*3 // 3 megabytes,
-    },
-    fileFilter: fileFilter
-});
-
+//Testing Route
 Router.get('/', (req, res)=>{
     res.send({success: true, msg:`Welcome to server`});
 });
 
-Router.post('/imgupload',upload.single('file') , (req, res)=>{
-    // res.send({success: true, url: 'https://res.cloudinary.com/oleaw/image/upload/v1516746659/DP_z4ail6.jpg'})   
+//Testing Route
+Router.post('/imgupload', Upload.single('file') , (req, res)=>{
     console.log(req.file);
-    res.send("req.fileList");
+    res.send({success: true, url:req.file.secure_url});
 });
 
-Router.post('/imrego', upload.single('itemImg'), (req, res)=>{
+
+Router.post('/imrego', addUUID, Upload.single('file'), (req, res)=>{
     if (req.body){
         const {uid} = req.session.unsignedToken;
-        const {title, catagory, description, imgURL} = req.body;
+        const {title, catagory, description} = req.body;
+        const {uuid} = req
 
-        new imrego({uid, title, catagory, description, imgURL})
+        new imrego({uid,
+            imNum: uuid,
+            title,
+            catagory,
+            description,
+            imgURL:(req.file)?
+                req.file.secure_url:
+                config.DEFAULT_ITEMLIST_IMG
+            })
         .save((err, rego)=>{
             res.send({success: true, imrego: {...rego, _doc:{...rego._doc, uid:""}}});
         });

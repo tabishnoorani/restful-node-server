@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import UUID from 'node-uuid';
 import config from '../../config';
 import Session from '../../database/models/session';
 
@@ -39,4 +40,9 @@ export function validSession (req, res, next) {
                 } else res.send({success: false, msg:"Not authorized"});
             }else res.send({success: false, msg:"Not authorized"});
         });
+}
+
+export function addUUID (req, res, next) {
+    req.uuid = UUID.v4();
+    next();
 }
