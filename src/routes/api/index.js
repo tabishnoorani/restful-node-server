@@ -62,6 +62,25 @@ Router.post('/updateimrego', Upload.single('file'), (req, res)=>{
     } else res.send({success: false, msg:"Can't handle empty body!"});
 });
 
+Router.post('/updateimregostatus', (req, res)=>{
+    if (req.body){
+        const {uid} = req.session.unsignedToken;
+        const {id, status} = req.body;
+        console.log(id);
+
+        imrego.findById(id, function (err, item){
+            if (!err && item.uid !== uid){
+                item.set({status});
+                item.save((err, updatedRego)=>{
+                    if (!err) {
+                        res.send({success: true, imrego:{...updatedRego._doc, uid:""}})
+                    } else res.send({success: false, msg: 'Can not update the status!'})
+                });
+            } else res.send({success: false, msg:"You are not authorized to update this content!"});
+        }) 
+    } else res.send({success: false, msg:"Invalid request to the server!"});
+});
+
 Router.post('/fetch-item-lists',(req, res)=>{
     const {uid} = req.session.unsignedToken;
     // Note: send only activated onces.
