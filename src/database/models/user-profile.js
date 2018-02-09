@@ -4,13 +4,9 @@ const Schema = mongoose.Schema;
 const schema = new Schema({
     dob: Date,
     gender: String,
-    contact:{
-        mobile: Number,
-        home: Number,
-        office: Number,
-        primary: Number
-    },
+    contact: String,
     address: String,
+    profilePicture: String,
     modifiedDate: Date
 });
 
