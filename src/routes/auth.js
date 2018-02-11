@@ -1,5 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import Profile from '../database/models/user-profile';
+import Privacy from '../database/models/privacy';
 import User from '../database/models/username';
 import Session from '../database/models/session';
 import config from '../config';
@@ -15,25 +17,29 @@ Router.get ('/', (req,res) => {
 
 Router.get ('/initializeToken', validSession, (req, res)=>{
     User.findById(req.uid)
-    .then((user, err)=>{
+    .populate('profile')
+    .populate('privacy')
+    .exec( function (err, user){
         if (err) res.status(403).send({
             success: false, 
             msg: "User login error. Please contact webmasters."
         });
         if (!user) {
-            res.status(403).send({
+            res.send({
             success: false, 
             msg: 'Authentication failed. User not found.'
         });
         } else {
-            const {fname, lname, email} = user
-            const data = {fname, lname, email}
+            const {email, profile, privacy} = user;
+            const {fname, lname} = profile;
+            const data = {fname, lname, email, profile, privacy}
             res.send({
                 success: true, 
                 msg: "User signed in.",  
                 data: data});
         }
-    });
+    })
+    .catch((err)=>{console.log(err)})
 });
 
 Router.get('/signout', validSession, (req, res)=>{
@@ -45,26 +51,36 @@ Router.get('/signout', validSession, (req, res)=>{
 
 Router.post('/signup', (req, res) => {
     const {fname, lname, email, password} = req.body.user;
-    new User({fname, lname, email, password})
-    .save((err, user) => {
-        if (!err){
-            new Session ({uid: user.id}).save((err, session)=>{
-                const unsignedToken = {
-                    sid: session.id, 
-                    uid: session.uid
-                };
-                const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
-                const data = {fname, lname, email}
-                res.send({success: true, msg:"User created.", token: token, data: data});
-            })
-        } else res.send({success:false, msg: "User couldn't be created."})
-    });
+
+    new Profile({fname, lname})
+    .save((err, profile)=>{
+        new Privacy({})
+        .save((err, privacy)=>{
+            new User({email, password, profile: profile._id, privacy: privacy._id})
+            .save((err, user) => {
+                if (!err){
+                    new Session ({uid: user.id}).save((err, session)=>{
+                        const unsignedToken = {
+                            sid: session.id, 
+                            uid: session.uid
+                        };
+                        const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
+                        const data = {fname, lname, email, profile, privacy}
+                        res.send({success: true, msg:"User created.", token: token, data: data});
+                    })
+                } else res.send({success:false, msg: "User couldn't be created."})
+            });
+        })
+    })
 });
 
 Router.post('/signin', (req, res)=>{
     const {email, password} = req.body;
     
-    User.findOne({email: email}).then((user, err)=>{
+    User.findOne({email: email})
+    .populate('profile')
+    .populate('privacy')
+    .then((user, err)=>{
         if (err) res.status(403).send({
             success: false, msg: err
         });
@@ -83,8 +99,9 @@ Router.post('/signin', (req, res)=>{
                         uid: session.uid
                     };
                     const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
-                    const {fname, lname, email} = user
-                    const data = {fname, lname, email}
+                    const {profile, privacy, email} = user;
+                    const {fname, lname} = profile;
+                    const data = {fname, lname, email, profile, privacy}
                     res.send({success: true, msg: "User signed in.", token: token, data: data});
                 })} else res.status(200).send({
                     sucess: false,

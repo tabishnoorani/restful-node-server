@@ -1,16 +1,15 @@
 import mongoose from 'mongoose';
-import UserProfile from './user-profile';
 import bcrypt from 'bcrypt';
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
     fname: {
         type: String,
-        required: true
+        // required: true
     },
     lname: {
         type: String,
-        required: true
+        // required: true
     },
     email: {
         type: String,
@@ -21,21 +20,19 @@ const schema = new Schema({
         type: String,
         required: true
     },
-    profileID:{
+    profile:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: UserProfile,
-        required: false
+        ref: 'userprofile',
+    },
+    privacy:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'privacy',
     },
     creationDate: {
         type: Date,
         default: Date.now
     }
 });
-
-
-// schema.pre('validate', (next)=>{
-//     next();
-// });
 
 schema.pre('save', function(next){
     const user = this;
