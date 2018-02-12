@@ -51,39 +51,44 @@ Router.get('/signout', validSession, (req, res)=>{
 
 Router.post('/signup', (req, res) => {
     const {fname, lname, email, password} = req.body.user;
-
-    new Profile({fname, lname})
-    .save((err, profile)=>{
-        new Privacy({})
-        .save((err, privacy)=>{
-            new User({email, password, profile: profile._id, privacy: privacy._id})
-            .save((err, user) => {
-                if (!err){
-                    new Session ({uid: user.id}).save((err, session)=>{
-                        const unsignedToken = {
-                            sid: session.id, 
-                            uid: session.uid
-                        };
-                        const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
-                        const data = {
-                            fname, 
-                            lname, 
-                            email, 
-                            creationDate: user.creationDate, 
-                            profile, 
-                            privacy
-                        }
-                        console.log(data);
-                        res.send({
-                            success: true, 
-                            msg:"User created.", 
-                            token: token, 
-                            data: data
-                        });
-                    })
-                } else res.send({success:false, msg: "User couldn't be created. Email already exist!"})
-            });
-        })
+    User.findOne({email})
+    .exec(function (err, user){
+        if (user){
+            res.send({success:false, msg: "Try another email address. User already exist!"});
+        } else { 
+            new Profile({fname, lname})
+            .save((err, profile)=>{
+                new Privacy({})
+                .save((err, privacy)=>{
+                    new User({email, password, profile: profile._id, privacy: privacy._id})
+                    .save((err, user) => {
+                        if (!err){
+                            new Session ({uid: user.id}).save((err, session)=>{
+                                const unsignedToken = {
+                                    sid: session.id, 
+                                    uid: session.uid
+                                };
+                                const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
+                                const data = {
+                                    fname, 
+                                    lname, 
+                                    email, 
+                                    creationDate: user.creationDate, 
+                                    profile, 
+                                    privacy
+                                }
+                                res.send({
+                                    success: true, 
+                                    msg:"User created.", 
+                                    token: token, 
+                                    data: data
+                                });
+                            })
+                        } else res.send({success:false, msg: "User couldn't be created. Try again or contact web admin."})
+                    });
+                })
+            })
+        }
     })
 });
 
