@@ -30,9 +30,9 @@ Router.get ('/initializeToken', validSession, (req, res)=>{
             msg: 'Authentication failed. User not found.'
         });
         } else {
-            const {email, profile, privacy} = user;
+            const {email, creationDate, profile, privacy} = user;
             const {fname, lname} = profile;
-            const data = {fname, lname, email, profile, privacy}
+            const data = {fname, lname, email, creationDate, profile, privacy}
             res.send({
                 success: true, 
                 msg: "User signed in.",  
@@ -65,10 +65,23 @@ Router.post('/signup', (req, res) => {
                             uid: session.uid
                         };
                         const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
-                        const data = {fname, lname, email, profile, privacy}
-                        res.send({success: true, msg:"User created.", token: token, data: data});
+                        const data = {
+                            fname, 
+                            lname, 
+                            email, 
+                            creationDate: user.creationDate, 
+                            profile, 
+                            privacy
+                        }
+                        console.log(data);
+                        res.send({
+                            success: true, 
+                            msg:"User created.", 
+                            token: token, 
+                            data: data
+                        });
                     })
-                } else res.send({success:false, msg: "User couldn't be created."})
+                } else res.send({success:false, msg: "User couldn't be created. Email already exist!"})
             });
         })
     })
@@ -99,9 +112,9 @@ Router.post('/signin', (req, res)=>{
                         uid: session.uid
                     };
                     const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
-                    const {profile, privacy, email} = user;
+                    const {email, creationDate, profile, privacy} = user;
                     const {fname, lname} = profile;
-                    const data = {fname, lname, email, profile, privacy}
+                    const data = {fname, lname, email, creationDate, profile, privacy}
                     res.send({success: true, msg: "User signed in.", token: token, data: data});
                 })} else res.status(200).send({
                     sucess: false,

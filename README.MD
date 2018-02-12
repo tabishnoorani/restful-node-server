@@ -89,3 +89,9 @@ Your app is ready to be deployed!
 +Error handling for non standard req.body.
 +XCC Handling
 +Code efficiency.
++Add session exp for a month time is not used (add last used)
+    -Instead of deleting the session add active status
+
+### `Need Fix`
++Signup
++
