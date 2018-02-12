@@ -93,5 +93,13 @@ Your app is ready to be deployed!
     -Instead of deleting the session add active status
 
 ### `Need Fix`
-+Signup
-+
++Signup issues - Fixed : 2/12/18 7:45pm
+
+### Git Comment Codes: (from 2/12/18 7:50pm)
+PR (Performance review) : Edit code for better performance.
+FR (Functionality Review) : Code Edit for better functionality.
+NFA (New Feature Added) : Added a new feature to the code.
+NFD (New feature development) : When working with new feature.
+ERR (Error) : Error found and need to be resolved.
+ER (Error Resolved): When error is resolved.
+RMD (Readme Description) : Edit Readme.MD File.
