@@ -8,7 +8,6 @@ const Router = express.Router();
 
 Router.post('/signup', (req, res)=>{
     const {sname, logo, email, password} = req.body;
-    console.log(req.body);
     new Sponsor({sname, logo, email, password}).save()
     .then((user)=>{
         new Session ({uid: user.id}).save((err, session)=>{

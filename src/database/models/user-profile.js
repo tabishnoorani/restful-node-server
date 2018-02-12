@@ -19,6 +19,7 @@ const schema = new Schema({
         type: String,
         default: 'u'
     },
+    prefix: String,
     contact: String,
     address: String,
     profilePicture: String,

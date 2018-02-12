@@ -1,6 +1,9 @@
 import express from 'express';
 import axios from 'axios';
 import imrego from '../../database/models/imrego';
+import Profile from '../../database/models/user-profile';
+import Privacy from '../../database/models/privacy';
+import User from '../../database/models/username';
 import Upload from './Multer';
 import { addUUID } from '../auth/middlewares';
 import config from '../../config';
@@ -14,7 +17,6 @@ Router.get('/', (req, res)=>{
 
 //Testing Route
 Router.post('/imgupload', Upload.single('file') , (req, res)=>{
-    console.log(req.file);
     res.send({success: true, url:req.file.secure_url});
 });
 
@@ -66,8 +68,7 @@ Router.post('/updateimregostatus', (req, res)=>{
     if (req.body){
         const {uid} = req.session.unsignedToken;
         const {id, status} = req.body;
-        console.log(id);
-
+        
         imrego.findById(id, function (err, item){
             if (!err && item.uid !== uid){
                 item.set({status});
@@ -112,5 +113,49 @@ Router.post('/delete-item-list', (req, res)=>{
         res.send({success: false, msg:"Contact webmaster."})
     });
 })
+
+Router.post('/updateprofile', Upload.single('file'), (req, res)=>{
+    if (req.body){
+        const {uid} = req.session.unsignedToken;
+        const {id, gender, dob, address, prefix, contact} = req.body;
+        // const {uuid} = req
+        User.findById(uid, function (err, user){
+            if (user.profile==id){
+                Profile.findById(id, function (err, item){
+                    if (req.file){
+                        item.set({profilePicture: req.file.secure_url});
+                    }
+                    item.set({gender, dob, address, prefix, contact, modifiedDate: Date.now()});
+                    item.save((err, profile)=>{
+                        if (!err) {
+                            res.send({success: true, profile});
+                        } else res.send({success: false, msg: 'Can not update!'})
+                    });
+                });
+            } else res.send({success: false, msg:"You are not authorized to update this content!"});
+        });
+    } else res.send({success: false, msg:"Can't handle empty body!"});
+});
+
+Router.post('/removeimg', (req, res)=>{
+    if (req.body){
+        const {uid} = req.session.unsignedToken;
+        const {id} = req.body;
+
+        User.findById(uid, function (err, user){
+            const userProfile = user.profile;
+            if (userProfile == id) {
+                Profile.findById(id, function (err, item){
+                    item.set({profilePicture: ""});
+                    item.save((err, profile)=>{
+                        if (!err) {
+                            res.send({success: true, profile});
+                        } else res.send({success: false, msg: 'Cannot update!'})
+                    });
+                }); 
+            } else res.send({success: false, msg:"You are not authorized to update this content!"});
+        });
+    } else res.send({success: false, msg:"Can't handle empty body!"});
+});
 
 export default Router;
