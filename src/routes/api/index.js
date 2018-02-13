@@ -158,4 +158,25 @@ Router.post('/removeimg', (req, res)=>{
     } else res.send({success: false, msg:"Can't handle empty body!"});
 });
 
+Router.post('/updateprivacy', (req, res)=>{
+    if (req.body){
+        const {uid} = req.session.unsignedToken;
+        const {id, displayname, visiblecontacts} = req.body;
+        console.log (req.body);
+        // const {uuid} = req
+        User.findById(uid, function (err, user){
+            if (user.privacy==id){
+                Privacy.findById(id, function (err, item){
+                    item.set({displayname, visiblecontacts, modifiedDate: Date.now()});
+                    item.save((err, profile)=>{
+                        if (!err) {
+                            res.send({success: true, profile});
+                        } else res.send({success: false, msg: 'Can not update!'})
+                    });
+                });
+            } else res.send({success: false, msg:"You are not authorized to update this content!"});
+        });
+    } else res.send({success: false, msg:"Can't handle empty body!"});
+});
+
 export default Router;

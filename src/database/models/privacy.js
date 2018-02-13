@@ -7,11 +7,15 @@ const schema = new Schema({
     },
     visiblecontacts: {
         type: Array,
-        default: ['email']
+        default: ['Email']
     },
     visibleitem: {
         type: Boolean,
         default: false  
+    },
+    modifiedDate: {
+        type: Date,
+        default: Date.now()
     }
 });
 
