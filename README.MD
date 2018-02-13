@@ -103,3 +103,4 @@ NFD (New feature development) : When working with new feature.
 ERR (Error) : Error found and need to be resolved.
 ER (Error Resolved): When error is resolved.
 RMD (Readme Description) : Edit Readme.MD File.
+UX (User Experience enchancement) : When any interface in interacting feature is added.
