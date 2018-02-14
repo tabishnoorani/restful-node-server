@@ -27,7 +27,8 @@ Router.post('/imrego', addUUID, Upload.single('file'), (req, res)=>{
         const {title, catagory, description} = req.body;
         const {uuid} = req
 
-        new imrego({uid,
+        new imrego({
+            uid,
             imNum: uuid,
             title,
             catagory,
@@ -176,6 +177,29 @@ Router.post('/updateprivacy', (req, res)=>{
                 });
             } else res.send({success: false, msg:"You are not authorized to update this content!"});
         });
+    } else res.send({success: false, msg:"Can't handle empty body!"});
+});
+
+Router.post('/changepassword', (req, res)=> {
+    if (req.body){
+        const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g;
+        const newPasswordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/g;
+        const {uid} = req.session.unsignedToken;
+        const {password, newPassword} = req.body;
+        if (passwordPattern.test(password)===true && newPasswordPattern.test(newPassword)===true){
+            User.findById(uid, (err,user)=>{
+                user.comparePassword(password, (err, isMatch)=>{
+                    if (!err && isMatch) {
+                        user.set({password: newPassword})
+                        user.save((err,user)=>{
+                            if (!err){
+                                res.send({success:true, msg: "Password changed."})
+                            } else res.send({success:false, msg: "Database couldn't be updated.", errCode:"dbErr"})
+                        })
+                    } else res.send({success:false, msg: "The password entered is not correct. Please retype the password.", errCode:"incPwd"})
+                });
+            })
+        } else res.send({success: false, msg: "The passwords are not at desired security standards", errCode:'unStdPwd'})
     } else res.send({success: false, msg:"Can't handle empty body!"});
 });
 
