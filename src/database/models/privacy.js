@@ -5,10 +5,23 @@ const schema = new Schema({
     displayname: {
         type: String,
     },
-    visiblecontacts: {
-        type: Array,
-        default: ['Email']
+    // visiblecontacts: {
+    //     type: Array,
+    //     default: ['Email']
+    // },
+    email: {
+        type: Boolean,
+        default: true  
     },
+    contact: {
+        type: Boolean,
+        default: false  
+    },
+    address: {
+        type: Boolean,
+        default: false  
+    },
+
     visibleitem: {
         type: Boolean,
         default: false  

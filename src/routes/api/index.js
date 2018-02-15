@@ -162,13 +162,12 @@ Router.post('/removeimg', (req, res)=>{
 Router.post('/updateprivacy', (req, res)=>{
     if (req.body){
         const {uid} = req.session.unsignedToken;
-        const {id, displayname, visiblecontacts} = req.body;
+        const {id, displayname, email, contact, address} = req.body;
         console.log (req.body);
-        // const {uuid} = req
         User.findById(uid, function (err, user){
             if (user.privacy==id){
                 Privacy.findById(id, function (err, item){
-                    item.set({displayname, visiblecontacts, modifiedDate: Date.now()});
+                    item.set({displayname, email, contact, address, modifiedDate: Date.now()});
                     item.save((err, profile)=>{
                         if (!err) {
                             res.send({success: true, profile});
@@ -202,5 +201,49 @@ Router.post('/changepassword', (req, res)=> {
         } else res.send({success: false, msg: "The passwords are not at desired security standards", errCode:'unStdPwd'})
     } else res.send({success: false, msg:"Can't handle empty body!"});
 });
+
+Router.post('/searchimrego', (req, res)=>{
+    if (req.body.imNum!==undefined){
+        const {uid} = req.session.unsignedToken;
+        const {imNum} = req.body;
+        imrego.findOne({imNum}, (err, imrego) => {
+            if (err){
+                res.send({success: false, msg:"Can't search the database", errCode:'searchimrego-dbIssue'})
+            } else {
+                const {_doc} = imrego;
+                if (imrego!==undefined && _doc.uid!=uid){
+                    if (_doc.status==='Lost') {
+                        User.findById(_doc.uid)
+                        .populate('profile')
+                        .populate('privacy')
+                        .exec( function (err, user){
+                            const {profile, privacy} = user;
+                            if (!err){
+                                const ownerData = {
+                                    displayName: (privacy.displayname)? privacy.displayname : `${profile.fname} ${profile.lname}`,
+                                    email: (privacy.email)? user.email : undefined,
+                                    contact: (privacy.contact)? profile.contact : undefined,
+                                    address: (privacy.address)? profile.address: undefined,
+                                }
+                                res.send({
+                                    success:true, 
+                                    imrego:{..._doc, uid:undefined},
+                                    ownerData
+                                });
+                            } else res.send({success: false, msg:"Contact web administrator.", errCode:"searchimrego-userDataFetchingError"})
+                        })
+                    } else {
+                        const {_id} = _doc
+                        res.send({
+                            success: true, 
+                            imrego: undefined,
+                            ownerData: undefined,
+                        });
+                    }
+                } else res.send({success:false, msg: 'No record found'})
+            }
+        })
+    } else res.send({success: false, msg: "Can't handle empty body!", errCode: "searchimrego-emptyBody" })
+})
 
 export default Router;
