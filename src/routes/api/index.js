@@ -4,6 +4,7 @@ import imrego from '../../database/models/imrego';
 import Profile from '../../database/models/user-profile';
 import Privacy from '../../database/models/privacy';
 import User from '../../database/models/username';
+import FoundItem from '../../database/models/found-item';
 import Upload from './Multer';
 import { addUUID } from '../auth/middlewares';
 import config from '../../config';
@@ -210,8 +211,13 @@ Router.post('/searchimrego', (req, res)=>{
             if (err){
                 res.send({success: false, msg:"Can't search the database", errCode:'searchimrego-dbIssue'})
             } else {
-                const {_doc} = imrego;
-                if (imrego!==undefined && _doc.uid!=uid){
+                console.log (imrego)
+                if (imrego!==null){
+                if (imrego._doc.uid!=uid){
+                    const {_doc} = imrego;
+                    if (_doc.activated!==true){
+                        res.send({success: false, msg:'The item has been deleted.', errCode:'searchimrego-del-000'})
+                    }
                     if (_doc.status==='Lost') {
                         User.findById(_doc.uid)
                         .populate('profile')
@@ -236,14 +242,48 @@ Router.post('/searchimrego', (req, res)=>{
                         const {_id} = _doc
                         res.send({
                             success: true, 
-                            imrego: undefined,
-                            ownerData: undefined,
+                            imrego: {
+                                _id:_doc._id, 
+                                title: _doc.title, 
+                                catagory: _doc.catagory,
+                                // imgURL: _doc.imgURL,
+                                imgURL: '',
+                                description: 'undisclosed'
+                            },
+                            ownerData: {
+                                displayName: 'undisclosed',
+                            },
                         });
                     }
+                } 
                 } else res.send({success:false, msg: 'No record found'})
             }
         })
     } else res.send({success: false, msg: "Can't handle empty body!", errCode: "searchimrego-emptyBody" })
+})
+
+Router.post('/addfounditem', (req, res)=>{
+
+    if (req.body._id){        
+        const {uid} = req.session.unsignedToken
+        const {_id} = req.body;
+
+        FoundItem.findOne({uid, iid:_id})
+        .exec(function (err, fi){
+
+            if (fi!=null){
+                res.send({success: false, msg:'Data already added', errCode:'addfounditem-000'})
+            } else {
+                new FoundItem({uid, iid:_id}).save((err, founditem)=>{
+
+                    if (!err){
+                        console.log(founditem);
+                        res.send({success:true, data: founditem})
+                    }else res.send ({success: false, msg: "Couldn't save. Please contact Web Administrator", errCode:'addfounditem-001'})
+                })
+            }
+        })
+    } else res.send ({success:false, msg:'addfounditem-002'})
 })
 
 export default Router;
