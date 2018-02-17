@@ -88,7 +88,7 @@ Router.post('/fetch-item-lists',(req, res)=>{
     const {uid} = req.session.unsignedToken;
     // Note: send only activated onces.
     // Note: don't send the uid value.
-    imrego.find({uid: uid}).then((itemLists, err)=>{
+    imrego.find({uid: uid, activated: true}).then((itemLists, err)=>{
         if (err) res.send({success: false, 
             msg:"Can't resolve the request. Please contact the webmasters."
         });   
@@ -102,13 +102,19 @@ Router.post('/delete-item-list', (req, res)=>{
     imrego.findById(req.body.id)
     .then((data)=>{
         if (data.uid==uid){
-            imrego.findByIdAndRemove(req.body.id)
-            .then((result)=>{
-                res.send({success: true, msg:"Deleted"})
-            })
-            .catch((err)=>{
-                res.send({success: false, msg:"Contact webmaster."})
-            })
+            data.set({activated: false, dateDeleted: Date.now()})
+            data.save((err, imregoDeleted)=>{
+                if (!err) {
+                    res.send({success: true, msg:'Deleted'});
+                } else res.send({success: false, msg: "Cannot delete. Contact Web Admin"})
+            });
+            // imrego.findByIdAndRemove(req.body.id)
+            // .then((result)=>{
+            //     res.send({success: true, msg:"Deleted"})
+            // })
+            // .catch((err)=>{
+            //     res.send({success: false, msg:"Contact webmaster."})
+            // })
         } else {res.send({success: false, msg: "Not a valid request."})}
     })
     .catch((err)=>{
@@ -207,7 +213,7 @@ Router.post('/searchimrego', (req, res)=>{
     if (req.body.imNum!==undefined){
         const {uid} = req.session.unsignedToken;
         const {imNum} = req.body;
-        imrego.findOne({imNum}, (err, imrego) => {
+        imrego.findOne({imNum, activated:true}, (err, imrego) => {
             if (err){
                 res.send({success: false, msg:"Can't search the database", errCode:'searchimrego-dbIssue'})
             } else {
@@ -215,9 +221,9 @@ Router.post('/searchimrego', (req, res)=>{
                 if (imrego!==null){
                 if (imrego._doc.uid!=uid){
                     const {_doc} = imrego;
-                    if (_doc.activated!==true){
-                        res.send({success: false, msg:'The item has been deleted.', errCode:'searchimrego-del-000'})
-                    }
+                    // if (_doc.activated!==true){
+                    //     res.send({success: false, msg:'The item has been deleted.', errCode:'searchimrego-del-000'})
+                    // }
                     if (_doc.status==='Lost') {
                         User.findById(_doc.uid)
                         .populate('profile')

@@ -48,7 +48,8 @@ const schema = new Schema({
         default: true,
     },
     dateLost: [Date],
-    dateFound:[Date]
+    dateFound:[Date],
+    dateDeleted:Date
 });
 
 const Model = mongoose.model('imrego', schema);
