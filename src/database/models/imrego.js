@@ -13,7 +13,7 @@ const schema = new Schema({
     },
     uid: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: User,
+        ref: 'username',
         required: true
     },
     title:{

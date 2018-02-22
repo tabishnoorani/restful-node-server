@@ -1,5 +1,6 @@
 import express from 'express';
 import axios from 'axios';
+import _ from 'lodash';
 import imrego from '../../database/models/imrego';
 import Profile from '../../database/models/user-profile';
 import Privacy from '../../database/models/privacy';
@@ -8,6 +9,7 @@ import FoundItem from '../../database/models/found-item';
 import Upload from './Multer';
 import { addUUID } from '../auth/middlewares';
 import config from '../../config';
+
 
 const Router = express.Router();
 
@@ -221,9 +223,6 @@ Router.post('/searchimrego', (req, res)=>{
                 if (imrego!==null){
                 if (imrego._doc.uid!=uid){
                     const {_doc} = imrego;
-                    // if (_doc.activated!==true){
-                    //     res.send({success: false, msg:'The item has been deleted.', errCode:'searchimrego-del-000'})
-                    // }
                     if (_doc.status==='Lost') {
                         User.findById(_doc.uid)
                         .populate('profile')
@@ -261,12 +260,12 @@ Router.post('/searchimrego', (req, res)=>{
                             },
                         });
                     }
-                } 
+                } else res.send({success:false, msg: 'No record found'}) 
                 } else res.send({success:false, msg: 'No record found'})
             }
         })
     } else res.send({success: false, msg: "Can't handle empty body!", errCode: "searchimrego-emptyBody" })
-})
+});
 
 Router.post('/addfounditem', (req, res)=>{
 
@@ -290,6 +289,55 @@ Router.post('/addfounditem', (req, res)=>{
             }
         })
     } else res.send ({success:false, msg:'addfounditem-002'})
-})
+});
+
+Router.post('/fetchfoundlist', (req, res)=>{
+    const {uid} = req.session.unsignedToken
+    FoundItem.find({uid, status: {$ne:'Deleted'}})
+    .select('-uid')
+    .populate({
+        path: 'iid',
+        match: {activated : true},
+        populate: {
+            path: 'uid',
+            select: '-_id -password -creationDate',
+            populate:{
+                path: 'profile privacy'
+            },
+        }
+
+    })
+    .exec(function (err, fil){
+        if (!err){
+            if (fil!==null){
+                const modifiedFil = _.map([...fil], function(value){
+                    const { iid } = value;
+                    const {email, profile, privacy} = (iid!==null) ? iid.uid : {};
+                    return({
+                        _id: value._id,
+                        status: value.status,
+                        date: value.date,
+                        imrego: (iid!==null) ? {
+                            imNum: iid.imNum,
+                            title: iid.title,
+                            catagory: iid.catagory,
+                            description: (iid.status==='Lost') ? iid.description : undefined,
+                            imgURL: (iid.status==='Lost') ? iid.imgURL : undefined,
+                        } : null,
+                        ownerData: (iid!==null) ? 
+                            (iid.status==='Lost') ? {
+                                displayName: (privacy.displayname)? privacy.displayname : `${profile.fname} ${profile.lname}`,
+                                email: (privacy.email)? email : undefined,
+                                contact: (privacy.contact)? profile.contact : undefined,
+                                address: (privacy.address)? profile.address: undefined,
+                            } : null
+                        : null,
+                    })
+                })
+                res.send({ success:true, data: modifiedFil});
+            } else res.send({success:true, data: {}})
+        } else res.send({success:false, msg:'Contact web administrator', errCode:'fetchfoundlist-000'});            
+    });
+});
 
 export default Router;
