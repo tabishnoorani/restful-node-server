@@ -275,16 +275,25 @@ Router.post('/addfounditem', (req, res)=>{
 
         FoundItem.findOne({uid, iid:_id})
         .exec(function (err, fi){
-
             if (fi!=null){
-                res.send({success: false, msg:'Data already added', errCode:'addfounditem-000'})
+                const sl = fi.status.length-1;
+                const deleted = (fi.status[sl]==='Deleted')
+                if (deleted){
+                    fi.set({status: [...fi.status, 'Holding']});
+                    fi.set({date:[...fi.date, Date.now()]});
+                    fi.save((err,founditem)=>{
+                        if (!err){
+                            res.send({success:true, data: founditem})
+                        } else res.send ({success: false, msg: "Couldn't save. Please contact Web Administrator", errCode:'addfounditem-001'})
+                    });
+                } else res.send({success: false, msg:'Data already added', errCode:'addfounditem-000'})
             } else {
                 new FoundItem({uid, iid:_id}).save((err, founditem)=>{
 
                     if (!err){
-                        console.log(founditem);
+                        // console.log(founditem);
                         res.send({success:true, data: founditem})
-                    }else res.send ({success: false, msg: "Couldn't save. Please contact Web Administrator", errCode:'addfounditem-001'})
+                    } else res.send ({success: false, msg: "Couldn't save. Please contact Web Administrator", errCode:'addfounditem-001'})
                 })
             }
         })
@@ -293,7 +302,8 @@ Router.post('/addfounditem', (req, res)=>{
 
 Router.post('/fetchfoundlist', (req, res)=>{
     const {uid} = req.session.unsignedToken
-    FoundItem.find({uid, status: {$ne:'Deleted'}})
+    FoundItem.find({uid})
+    // FoundItem.find({uid, status: {$ne:'Deleted'}})
     .select('-uid')
     .populate({
         path: 'iid',
@@ -310,34 +320,64 @@ Router.post('/fetchfoundlist', (req, res)=>{
     .exec(function (err, fil){
         if (!err){
             if (fil!==null){
-                const modifiedFil = _.map([...fil], function(value){
+                const newFil = _.filter(fil, function (value){
+                    const sl = value.status.length
+                    return (value.status[sl-1]!=='Deleted')
+                })
+                const modifiedFil = _.map([...newFil], function(value){
                     const { iid } = value;
                     const {email, profile, privacy} = (iid!==null) ? iid.uid : {};
-                    return({
-                        _id: value._id,
-                        status: value.status,
-                        date: value.date,
-                        imrego: (iid!==null) ? {
-                            imNum: iid.imNum,
-                            title: iid.title,
-                            catagory: iid.catagory,
-                            description: (iid.status==='Lost') ? iid.description : undefined,
-                            imgURL: (iid.status==='Lost') ? iid.imgURL : undefined,
-                        } : null,
-                        ownerData: (iid!==null) ? 
-                            (iid.status==='Lost') ? {
-                                displayName: (privacy.displayname)? privacy.displayname : `${profile.fname} ${profile.lname}`,
-                                email: (privacy.email)? email : undefined,
-                                contact: (privacy.contact)? profile.contact : undefined,
-                                address: (privacy.address)? profile.address: undefined,
-                            } : null
-                        : null,
-                    })
+                    // const sl = value.status.length;
+                    // if (value.status[sl-1]!=='Deleted'){
+                        return({
+                            key: value._id,
+                            _id: value._id,
+                            status: value.status,
+                            date: value.date,
+                            imrego: (iid!==null) ? {
+                                imNum: iid.imNum,
+                                title: iid.title,
+                                catagory: iid.catagory,
+                                description: (iid.status==='Lost') ? iid.description : undefined,
+                                imgURL: (iid.status==='Lost') ? iid.imgURL : undefined,
+                            } : null,
+                            ownerData: (iid!==null) ? 
+                                (iid.status==='Lost') ? {
+                                    displayName: (privacy.displayname)? privacy.displayname : `${profile.fname} ${profile.lname}`,
+                                    email: (privacy.email)? email : undefined,
+                                    contact: (privacy.contact)? profile.contact : undefined,
+                                    address: (privacy.address)? profile.address: undefined,
+                                } : null
+                            : null,
+                        })
+                    // } else return undefined
                 })
                 res.send({ success:true, data: modifiedFil});
             } else res.send({success:true, data: {}})
         } else res.send({success:false, msg:'Contact web administrator', errCode:'fetchfoundlist-000'});            
     });
+});
+
+Router.post('/updatefoundliststatus', (req, res)=>{
+    if (req.body){
+        const {uid} = req.session.unsignedToken;
+        const {_id, status} = req.body;
+        FoundItem.findOne({_id, uid}, (err, fil)=>{
+            if (!err){
+                if (fil!==null){
+                    const updatedStatus = [...fil.status, status]
+                    const updatedDate = [...fil.date, Date.now()];
+                    fil.set({status: updatedStatus})
+                    fil.set({date: updatedDate})
+                    fil.save((err, deletedFil)=>{
+                        if (!err){
+                            res.send({success: true, msg: 'Found list deleted'})
+                        } else res.send({success: false, msg: 'Contact web admin', errCode:'removefoundlist-002'})
+                    })    
+                } else res.send({success:true, msg:'No record found!'})
+            } else res.send({success:false, msg:'Contact web administrator', errCode:'removefoundlist-001'});
+        })
+    } else res.send({success: false, msg: 'Cannot handle empty body', errCode:'removefoundlist-000'})
 });
 
 export default Router;
