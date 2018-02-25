@@ -25,7 +25,12 @@ const schema = new Schema({
     profilePicture: String,
     modifiedDate: {
         type: Date,
-        default: Date.now()}
+        default: Date.now()
+    },
+    notification: {
+        type: Array,
+        default: []
+    }
 });
 
 const Model = mongoose.model('userprofile',schema);

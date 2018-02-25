@@ -1,14 +1,15 @@
-import express from 'express';
-import axios from 'axios';
 import _ from 'lodash';
+import axios from 'axios';
+import express from 'express';
+import { addUUID, addAllID } from '../auth/middlewares';
+import config from '../../config';
 import imrego from '../../database/models/imrego';
 import Profile from '../../database/models/user-profile';
+import FoundItem from '../../database/models/found-item';
 import Privacy from '../../database/models/privacy';
 import User from '../../database/models/username';
-import FoundItem from '../../database/models/found-item';
+import Notification from '../../database/models/notifications';
 import Upload from './Multer';
-import { addUUID } from '../auth/middlewares';
-import config from '../../config';
 
 
 const Router = express.Router();
@@ -267,14 +268,26 @@ Router.post('/searchimrego', (req, res)=>{
     } else res.send({success: false, msg: "Can't handle empty body!", errCode: "searchimrego-emptyBody" })
 });
 
-Router.post('/addfounditem', (req, res)=>{
-
+Router.post('/addfounditem', addAllID, (req, res)=>{
     if (req.body._id){        
-        const {uid} = req.session.unsignedToken
+        const {uid, proid, priid} = req.session.unsignedToken
         const {_id} = req.body;
-
+        
+        //Looking for register item
+        let IMREGO = null;
+        imrego.findById(_id)
+        .exec(function (err, im){
+            if (err) res.send({success:false, msg:'Contact Web Admin.', errCode: 'addfounditem-005'})
+            if (im !== null){
+                if (im.activated === true){
+                    IMREGO=im;
+                } else res.send({success: false, msg:"Item doesn't exsist!", errCode:"addfounditem-003"})
+            } else res.send({success: false, msg:"Item doesn't exsist!", errCode:"addfounditem-004"})
+        });
+        
         FoundItem.findOne({uid, iid:_id})
         .exec(function (err, fi){
+            if (err) res.send({success: false, msg: 'Contact Web Admin', errCode: 'addfounditem-007'})
             if (fi!=null){
                 const sl = fi.status.length-1;
                 const deleted = (fi.status[sl]==='Deleted')
@@ -283,16 +296,59 @@ Router.post('/addfounditem', (req, res)=>{
                     fi.set({date:[...fi.date, Date.now()]});
                     fi.save((err,founditem)=>{
                         if (!err){
-                            res.send({success:true, data: founditem})
+                            // Adding Notification
+                            new Notification({
+                                uid: IMREGO.uid, 
+                                nCode: 'founditem', 
+                                refdb: founditem._id,
+                                data:{proid, priid, title:IMREGO.title, imNum: IMREGO.imNum},
+                            }).save((err, notification)=>{
+                                if (!err){
+                                    User.findById(notification.uid)
+                                    // .populate('profile')
+                                    .exec((err, user)=>{
+                                        Profile.findById(user.profile)
+                                        .exec((err, profile)=>{
+                                            if (err) res.send({success:false, msg:'Contact Web Admin', errCode:'addfounditem-008'});
+                                            profile.notification.push({seen: false, nid: notification._id})
+                                            profile.save((err, data)=>{
+                                                if (err) res.send({success:false, msg: 'Contact Web Admin', errCode:'addfounditem-009'});
+                                                res.send({success:true, data: founditem})
+                                            })
+                                        })
+                                    })
+                                } else res.send({success: false, msg: "Contact Web Admin", errCode:'addfounditem-006'})
+                            })
                         } else res.send ({success: false, msg: "Couldn't save. Please contact Web Administrator", errCode:'addfounditem-001'})
                     });
+
                 } else res.send({success: false, msg:'Data already added', errCode:'addfounditem-000'})
             } else {
                 new FoundItem({uid, iid:_id}).save((err, founditem)=>{
-
                     if (!err){
-                        // console.log(founditem);
-                        res.send({success:true, data: founditem})
+                        // Adding Notification
+                        new Notification({
+                            uid: IMREGO.uid, 
+                            nCode: 'founditem', 
+                            refdb: founditem._id,
+                            data:{proid, priid, title:IMREGO.title, imNum: IMREGO.imNum},
+                        }).save((err, notification)=>{
+                            if (!err){
+                                User.findById(notification.uid)
+                                // .populate('profile')
+                                .exec((err, user)=>{
+                                    Profile.findById(user.profile)
+                                    .exec((err, profile)=>{
+                                        if (err) res.send({success:false, msg:'Contact Web Admin', errCode:'addfounditem-008'});
+                                        profile.notification.push({seen: false, nid: notification._id})
+                                        profile.save((err, data)=>{
+                                            if (err) res.send({success:false, msg: 'Contact Web Admin', errCode:'addfounditem-009'});
+                                            res.send({success:true, data: founditem})
+                                        })
+                                    })
+                                })
+                            } else res.send({success: false, msg: "Contact Web Admin", errCode:'addfounditem-006'})
+                        })
                     } else res.send ({success: false, msg: "Couldn't save. Please contact Web Administrator", errCode:'addfounditem-001'})
                 })
             }

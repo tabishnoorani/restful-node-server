@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import UUID from 'node-uuid';
 import config from '../../config';
 import Session from '../../database/models/session';
+import User from '../../database/models/username';
 
 export function getTokenValue (req, res, next) {
     req.token = false;
@@ -40,6 +41,18 @@ export function validSession (req, res, next) {
                 } else res.send({success: false, msg:"Not authorized"});
             }else res.send({success: false, msg:"Not authorized"});
         });
+}
+
+export function addAllID (req, res, next) {
+    const {uid} = req;
+    User.findById(uid)
+    .exec((err, user)=>{
+        if (err) res.send({success: false, msg: 'Contact Web Admin', errCode: 'addallid-000'});
+        req.proid = user.profile;
+        req.priid = user.privacy;
+        next();
+    })
+
 }
 
 export function addUUID (req, res, next) {
