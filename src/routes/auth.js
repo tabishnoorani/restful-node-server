@@ -31,8 +31,8 @@ Router.get ('/initializeToken', validSession, (req, res)=>{
         });
         } else {
             const {email, creationDate, profile, privacy} = user;
-            const {fname, lname} = profile;
-            const data = {fname, lname, email, creationDate, profile, privacy}
+            const {fname, lname, notification} = profile;
+            const data = {fname, lname, email, notification, creationDate, profile, privacy}
             res.send({
                 success: true, 
                 msg: "User signed in.",  
@@ -75,7 +75,8 @@ Router.post('/signup', (req, res) => {
                                     email, 
                                     creationDate: user.creationDate, 
                                     profile, 
-                                    privacy
+                                    privacy,
+                                    notification:[]
                                 }
                                 res.send({
                                     success: true, 
@@ -118,8 +119,8 @@ Router.post('/signin', (req, res)=>{
                     };
                     const token = jwt.sign({unsignedToken}, config.jwt.SECRET_KEY);
                     const {email, creationDate, profile, privacy} = user;
-                    const {fname, lname} = profile;
-                    const data = {fname, lname, email, creationDate, profile, privacy}
+                    const {fname, lname, notification} = profile;
+                    const data = {fname, lname, email, creationDate, notification, profile, privacy}
                     res.send({success: true, msg: "User signed in.", token: token, data: data});
                 })} else res.status(200).send({
                     sucess: false,

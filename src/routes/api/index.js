@@ -274,7 +274,7 @@ Router.post('/addfounditem', addAllID, (req, res)=>{
         const {_id} = req.body;
         
         //Looking for register item
-        let IMREGO = null;
+        var IMREGO = null;
         imrego.findById(_id)
         .exec(function (err, im){
             if (err) res.send({success:false, msg:'Contact Web Admin.', errCode: 'addfounditem-005'})
@@ -310,7 +310,8 @@ Router.post('/addfounditem', addAllID, (req, res)=>{
                                         Profile.findById(user.profile)
                                         .exec((err, profile)=>{
                                             if (err) res.send({success:false, msg:'Contact Web Admin', errCode:'addfounditem-008'});
-                                            profile.notification.push({seen: false, nid: notification._id})
+                                            // profile.notification.push({seen: false, nid: notification._id})
+                                            profile.notification.push(notification._id)
                                             profile.save((err, data)=>{
                                                 if (err) res.send({success:false, msg: 'Contact Web Admin', errCode:'addfounditem-009'});
                                                 res.send({success:true, data: founditem})
@@ -340,7 +341,7 @@ Router.post('/addfounditem', addAllID, (req, res)=>{
                                     Profile.findById(user.profile)
                                     .exec((err, profile)=>{
                                         if (err) res.send({success:false, msg:'Contact Web Admin', errCode:'addfounditem-008'});
-                                        profile.notification.push({seen: false, nid: notification._id})
+                                        profile.notification.push(notification._id)
                                         profile.save((err, data)=>{
                                             if (err) res.send({success:false, msg: 'Contact Web Admin', errCode:'addfounditem-009'});
                                             res.send({success:true, data: founditem})
@@ -435,5 +436,46 @@ Router.post('/updatefoundliststatus', (req, res)=>{
         })
     } else res.send({success: false, msg: 'Cannot handle empty body', errCode:'removefoundlist-000'})
 });
+
+Router.post('/notifications', addAllID, (req, res)=>{
+    if (req.body){
+        const {uid} = req.session.unsignedToken;
+        const {proid} = req
+        const {next} = req.body;
+
+        Profile.findById(proid, (err, profile)=>{
+            if (!err){
+                var nLength = profile.notification.length;
+                profile.set({lastseen: nLength});
+                profile.save((err, updatedProfile)=>{
+                    if (!err){
+                        const lastSeen = updatedProfile.lastseen;
+                        const notificationArray = updatedProfile.notification;
+                        
+                        const last = (!isNaN(next)) ? 
+                        (next>nLength) ? nLength : (next<0) ? undefined : next
+                        :nLength;
+
+                        const first = (last<5) ? 0 : last-5;
+
+                        if (last){
+                            const searchNotification =  notificationArray.splice(first, last);
+                            console.log(searchNotification)
+                            Notification.find({ '_id': {$in: searchNotification} })
+                            .select('-uid -refdb')
+                            .populate('founditem')
+                            .exec((err, nResult)=>{
+                                if (!err) {
+                                    res.send({success: true, data: nResult, next: next-6})
+                                } else res.send({success: false, msg: "Contact web admin", errCode: "notifications-002"})
+                            })
+                        } else res.send({success: true, data:0})
+                    } else res.send({success: false, msg: "Contact web admin", errCode: "notifications-001"})
+                })
+            } else res.send({success: false, msg: "Contact web admin", errCode: "notifications-000"})
+        })
+    }
+});
+
 
 export default Router;

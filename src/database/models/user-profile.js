@@ -29,7 +29,11 @@ const schema = new Schema({
     },
     notification: {
         type: Array,
-        default: []
+        default: [],
+    },
+    lastseen: {
+        type: String,
+        default: null
     }
 });
 

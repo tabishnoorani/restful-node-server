@@ -14,7 +14,8 @@ const schema = new Schema({
     },
     refdb:{
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        required: true,
+        ref: 'founditem',
     },
     data: {
         type: Object,
