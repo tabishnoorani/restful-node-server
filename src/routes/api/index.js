@@ -460,13 +460,12 @@ Router.post('/notifications', addAllID, (req, res)=>{
 
                         if (last){
                             const searchNotification =  notificationArray.splice(first, last);
-                            console.log(searchNotification)
                             Notification.find({ '_id': {$in: searchNotification} })
                             .select('-uid -refdb')
                             .populate('founditem')
                             .exec((err, nResult)=>{
                                 if (!err) {
-                                    res.send({success: true, data: nResult, next: next-6})
+                                    res.send({success: true, data: _.reverse(nResult), next: ((last-6)<=0) ? null:last-6 })
                                 } else res.send({success: false, msg: "Contact web admin", errCode: "notifications-002"})
                             })
                         } else res.send({success: true, data:0})
